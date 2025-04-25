@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Foglalás Részletei (ID: {{ booking.BookingID if booking else 'Ismeretlen' }}){% endblock %}
+
+{% block content %}
+    <h2 class="mb-4">Foglalás Részletei</h2>
+
+    {% if booking %}
+        <div class="card shadow-sm mb-4">
+            <div class="card-header">
+                <strong>Foglalás ID: {{ booking.BookingID }}</strong> - <span class="badge bg-success">{{ booking.BookingStatus }}</span>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5>Foglaló adatai:</h5>
+                        <p>
+                            <strong>Név:</strong> {{ booking.UserName }}<br>
+                            <strong>Email:</strong> {{ booking.UserEmail }}
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <h5>Pálya adatai:</h5>
+                        <p>
+                            <strong>Pályaszám:</strong> {{ booking.CourtNumber }}<br>
+                            <strong>Borítás:</strong> {{ booking.SurfaceType | default('N/A') }}<br>
+                            <strong>Helyszín:</strong> {{ booking.LocationType | default('N/A') }}
+                        </p>
+                    </div>
+                </div>
+                <hr>
+                 <h5>Időpont:</h5>
+                 <p>
+                    <strong>Kezdés:</strong> {{ booking.StartTime.strftime('%Y. %B %d., %H:%M') }}<br> {# Hónap névvel #}
+                    <strong>Befejezés:</strong> {{ booking.EndTime.strftime('%Y. %B %d., %H:%M') }}
+                 </p>
+
+            </div>
+        </div>
+
+        <h3 class="mb-3">Kölcsönzött Eszközök</h3>
+        {% if rentals %}
+             <ul class="list-group mb-4">
+                {% for rental in rentals %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            {{ rental.QuantityRented }} db - <strong>{{ rental.EquipmentType }}</strong>
+                            {% if rental.Brand %}<small class="text-muted"> ({{ rental.Brand }} {{ rental.Model or '' }})</small>{% endif %}
+                        </div>
+                        <span class="badge bg-primary rounded-pill">{{ "%.0f"|format(rental.calculated_item_price|float) }} Ft</span>
+                    </li>
+                {% endfor %}
+                <li class="list-group-item d-flex justify-content-between align-items-center active"> {# Kiemelt sor az összegzésnek #}
+                    <strong>Eszközök díja összesen:</strong>
+                    <strong>{{ "%.0f"|format(total_rental_price|float) }} Ft</strong>
+                </li>
+            </ul>
+        {% else %}
+            <p class="text-muted">Ehhez a foglaláshoz nem tartoznak kölcsönzött eszközök.</p>
+        {% endif %}
+
+        <div class="card border-success mb-4"> {# Zöld keretes kártya #}
+            <div class="card-body text-success">
+                 <h4 class="card-title">Végösszeg</h4>
+                 <p class="card-text fs-5"> {# Nagyobb betűméret #}
+                    Pálya díja: {{ "%.0f"|format(court_price|float) }} Ft<br>
+                    Eszközök díja: {{ "%.0f"|format(total_rental_price|float) }} Ft<br>
+                    <strong>Teljes fizetendő: {{ "%.0f"|format(total_price|float) }} Ft</strong>
+                 </p>
+            </div>
+        </div>
+
+
+    {% else %}
+        <div class="alert alert-danger" role="alert">
+            A kért foglalás adatai nem tölthetők be vagy hiba történt.
+        </div>
+    {% endif %}
+
+    <a href="{{ url_for('my_bookings') }}" class="btn btn-outline-secondary">Vissza a foglalásaimhoz</a>
+
+{% endblock %}

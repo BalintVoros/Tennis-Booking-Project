@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Tenisz Foglaló{% endblock %}</title>
+
+    {# Bootstrap CSS és Flatpickr CSS betöltése CDN-ről #}
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
+    <style>
+        /* Opcionális saját stílusok */
+        body { padding-top: 56px; /* Hely a fixált navbarhoz */}
+        .flash-message { font-size: 0.95em; }
+        /* További saját stílusok itt... */
+    </style>
+
+</head>
+<body>
+    {# --- Navigációs Sáv Kezdete --- #}
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{{ url_for('home') }}">Tenisz Foglaló</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                {# --- Bal oldali menüpontok --- #}
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'home' %}active{% endif %}" aria-current="page" href="{{ url_for('home') }}">Főoldal</a>
+                    </li>
+                    {# Csak bejelentkezett felhasználóknak látható menüpontok #}
+                    {% if session.user_id %}
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.endpoint == 'new_booking_form' %}active{% endif %}" href="{{ url_for('new_booking_form') }}">Új foglalás</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.endpoint == 'my_bookings' %}active{% endif %}" href="{{ url_for('my_bookings') }}">Foglalásaim</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.endpoint == 'calendar_view' %}active{% endif %}" href="{{ url_for('calendar_view') }}">Naptár</a>
+                        </li>
+
+                        {# === ADMIN DROPDOWN (JAVÍTOTT ÉS MŰKÖDŐ) === #}
+                        {# Csak akkor jelenik meg, ha a felhasználó be van jelentkezve ÉS a szerepköre 'admin' #}
+                        {% if session.get('user_role') == 'admin' %}
+                           <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle {% if request.endpoint.startswith('admin_') %}active{% endif %}" href="#" id="navbarDropdownAdmin" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Admin
+                                </a>
+                                <ul class="dropdown-menu" aria-labelledby="navbarDropdownAdmin">
+                                    <li><a class="dropdown-item {% if request.endpoint == 'admin_dashboard' %}active{% endif %}" href="{{ url_for('admin_dashboard') }}">Vezérlőpult</a></li>
+                                    <li><a class="dropdown-item {% if request.endpoint == 'admin_list_users' %}active{% endif %}" href="{{ url_for('admin_list_users') }}">Felhasználók</a></li>
+                                    <li><a class="dropdown-item {% if request.endpoint == 'admin_list_courts' or request.endpoint.startswith('admin_court') %}active{% endif %}" href="{{ url_for('admin_list_courts') }}">Pályák</a></li>
+                                    <li><a class="dropdown-item {% if request.endpoint == 'admin_list_equipment' or request.endpoint.startswith('admin_equipment') %}active{% endif %}" href="{{ url_for('admin_list_equipment') }}">Eszközök</a></li>                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item {% if request.endpoint == 'admin_list_bookings' %}active{% endif %}" href="{{ url_for('admin_list_bookings') }}">Összes Foglalás</a></li>                                                                    </ul>
+                            </li>
+                        {% endif %} {# Admin szerepkör ellenőrzés vége #}
+                        {# ====================================== #}
+
+                    {% endif %} 
+                </ul>
+
+                {# --- Jobb oldali menüpontok (Felhasználói fiók) --- #}
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                     {% if session.user_id %} {# Ha be van jelentkezve #}
+                        <li class="nav-item">
+                           <span class="navbar-text me-2">Üdv, {{ session.user_name }}!</span>
+                        </li>
+                         <li class="nav-item">
+                            <a class="nav-link {% if request.endpoint == 'profile' %}active{% endif %}" href="{{ url_for('profile') }}">Profil</a>
+                         </li>
+                        <li class="nav-item">
+                           <a class="nav-link" href="{{ url_for('logout') }}">Kijelentkezés</a>
+                        </li>
+                     {% else %} {# Ha nincs bejelentkezve #}
+                        <li class="nav-item">
+                           <a class="nav-link {% if request.endpoint == 'register' %}active{% endif %}" href="{{ url_for('register') }}">Regisztráció</a>
+                        </li>
+                        <li class="nav-item">
+                           <a class="nav-link {% if request.endpoint == 'login' %}active{% endif %}" href="{{ url_for('login') }}">Bejelentkezés</a>
+                        </li>
+                     {% endif %} 
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+
+
+    <div class="container mt-4">
+
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    {# Üzenet típusának megfelelő Bootstrap alert osztály beállítása #}
+                    {% set alert_class = 'alert-info' %} {# Alapértelmezett #}
+                    {% if category == 'success' %} {% set alert_class = 'alert-success' %}
+                    {% elif category == 'danger' %} {% set alert_class = 'alert-danger' %}
+                    {% elif category == 'warning' %} {% set alert_class = 'alert-warning' %}
+                    {% endif %}
+                    <div class="alert {{ alert_class }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+  
+        {% block content %}
+     
+        {% endblock %}
+
+
+    </div>
+
+  
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    {# Flatpickr JS #}
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    {# Flatpickr magyar nyelvi fájl #}
+    <script src="https://npmcdn.com/flatpickr/dist/l10n/hu.js"></script>
+
+
+    {% block scripts %}{% endblock %}
+
+</body>
+</html>

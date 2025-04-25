@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block title %}Profilom - Tenisz Foglaló{% endblock %}
+
+{% block content %}
+    <h2 class="mb-4">Profilom</h2>
+
+
+    {% if user_data %}
+        <div class="card shadow-sm mb-4"> 
+            <div class="card-header">
+                Felhasználói adatok
+            </div>
+            <div class="card-body">
+                {# Definíciós lista a strukturált megjelenítéshez #}
+                <dl class="row">
+                    <dt class="col-sm-3">Felhasználói ID:</dt>
+                    <dd class="col-sm-9">{{ user_data.UserID }}</dd> {# Változatlan, ID-t is kiírjuk #}
+
+                    <dt class="col-sm-3">Név:</dt>
+                    <dd class="col-sm-9">{{ user_data.Name | e }}</dd> {# Név az adatbázisból #}
+
+               
+                    <dt class="col-sm-3">Email cím:</dt>
+                    <dd class="col-sm-9">{{ user_data.Email | e }}</dd> {# Email az adatbázisból #}
+
+                    <dt class="col-sm-3">Tagsági Státusz:</dt>
+                    <dd class="col-sm-9">
+                         {# Badge stílus a státusz alapján (hasonlóan az admin listához) #}
+                         {% if user_data.MemberStatus == 'Active' %}
+                             <span class="badge bg-success">{{ user_data.MemberStatus }}</span>
+                         {% elif user_data.MemberStatus == 'Inactive' %}
+                             <span class="badge bg-secondary">{{ user_data.MemberStatus }}</span>
+                         {% elif user_data.MemberStatus == 'Suspended' %}
+                             <span class="badge bg-warning text-dark">{{ user_data.MemberStatus }}</span>
+                         {% else %}
+                             <span class="badge bg-light text-dark">{{ user_data.MemberStatus | default('Ismeretlen') }}</span>
+                         {% endif %}
+                    </dd>
+
+                    <dt class="col-sm-3">Szerepkör:</dt>
+                    <dd class="col-sm-9">
+                        {# Badge stílus a szerepkör alapján #}
+                        {% if user_data.Role == 'admin' %}
+                            <span class="badge bg-info">{{ user_data.Role }}</span>
+                        {% else %}
+                            <span class="badge bg-light text-dark">{{ user_data.Role }}</span>
+                        {% endif %}
+                    </dd>
+                     {# ================= #}
+                </dl>
+            </div>
+        </div>
+
+     
+        <div class="mt-4">
+          
+             <a href="{{ url_for('edit_profile') }}" class="btn btn-primary">Profil szerkesztése</a>
+             <a href="{{ url_for('change_password') }}" class="btn btn-warning ms-2">Jelszó módosítása</a>
+        </div>
+
+    {% else %}
+     
+        <div class="alert alert-warning" role="alert">
+            Hiba történt a profiladatok betöltésekor. Próbáld meg később, vagy lépj be újra.
+        </div>
+    {% endif %}
+
+{% endblock %}

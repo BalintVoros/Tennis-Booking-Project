@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Pálya Szerkesztése - Admin{% endblock %}
+
+{% block content %}
+    <h2 class="mb-4">Pálya Szerkesztése: {{ court.CourtNumber if court else 'Ismeretlen' }}</h2>
+
+    {% if court %}
+    <form method="POST" action="{{ url_for('admin_update_court') }}" class="needs-validation" novalidate>
+        {# Rejtett mező a CourtID átadásához #}
+        <input type="hidden" name="court_id" value="{{ court.CourtID }}">
+
+        <div class="row g-3">
+            {# Pályaszám #}
+            <div class="col-md-6 mb-3">
+                <label for="court_number" class="form-label">Pályaszám:</label>
+                <input type="text" class="form-control" id="court_number" name="court_number" required value="{{ court.CourtNumber | e }}">
+                <div class="invalid-feedback">Pályaszám megadása kötelező.</div>
+            </div>
+
+            {# Óradíj #}
+             <div class="col-md-6 mb-3">
+                <label for="price_per_hour" class="form-label">Óradíj (Ft):</label>
+                <input type="number" class="form-control" id="price_per_hour" name="price_per_hour" required min="0" step="100" value="{{ court.PricePerHour if court.PricePerHour is not none else '' }}">
+                 <div class="invalid-feedback">Érvényes, nem negatív óradíj megadása kötelező.</div>
+            </div>
+
+             {# Borítás Típusa #}
+            <div class="col-md-6 mb-3">
+                <label for="surface_type" class="form-label">Borítás Típusa:</label>
+                {# default filter üres stringet ad vissza, ha None az érték #}
+                <input type="text" class="form-control" id="surface_type" name="surface_type" value="{{ court.SurfaceType | default('', true) | e }}">
+            </div>
+
+            {# Helyszín Típusa #}
+             <div class="col-md-6 mb-3">
+                <label for="location_type" class="form-label">Helyszín Típusa:</label>
+                 <input type="text" class="form-control" id="location_type" name="location_type" value="{{ court.LocationType | default('', true) | e }}">
+            </div>
+
+        </div> {# Sor vége #}
+
+        <hr>
+        <div class="d-flex justify-content-between">
+             <a href="{{ url_for('admin_list_courts') }}" class="btn btn-secondary">Mégse</a>
+             <button type="submit" class="btn btn-primary">Mentés</button>
+        </div>
+    </form>
+    {% else %}
+         <div class="alert alert-danger" role="alert">
+            Hiba: A pálya adatai nem tölthetők be (ID: {{ request.view_args.get('court_id') }}).
+         </div>
+          <a href="{{ url_for('admin_list_courts') }}" class="btn btn-secondary">Vissza a listához</a>
+    {% endif %}
+
+    {# Bootstrap validációs script #}
+     <script>
+        (function () {
+          'use strict';
+          var forms = document.querySelectorAll('.needs-validation');
+          Array.prototype.slice.call(forms)
+            .forEach(function (form) {
+              form.addEventListener('submit', function (event) {
+                if (!form.checkValidity()) {
+                  event.preventDefault();
+                  event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+              }, false);
+            });
+        })();
+    </script>
+
+{% endblock %}

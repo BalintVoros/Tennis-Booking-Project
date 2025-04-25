@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Összes Foglalás Kezelése - Admin{% endblock %}
+
+{% block content %}
+    <h2 class="mb-4">Összes Foglalás Kezelése</h2>
+    {# TODO: Add filtering options (date range, status, user, court) #}
+
+    {% if bookings %}
+        <div class="table-responsive">
+            <table class="table table-striped table-hover table-sm align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th scope="col">ID</th>
+                        <th scope="col">Felhasználó</th>
+                        <th scope="col">Pálya</th>
+                        <th scope="col">Kezdés</th>
+                        <th scope="col">Befejezés</th>
+                        <th scope="col">Státusz</th>
+                        <th scope="col" class="text-center">Műveletek</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for booking in bookings %}
+                        {# Add class based on status #}
+                        <tr class="{{ 'table-danger' if booking.BookingStatus == 'Cancelled' else '' }}">
+                            <th scope="row">{{ booking.BookingID }}</th>
+                            <td>{{ booking.UserName | default('N/A') }} (ID: {{ booking.UserID }})</td>
+                            <td>{{ booking.CourtNumber | default('N/A') }}</td>
+                            <td>{{ booking.StartTime.strftime('%Y.%m.%d %H:%M') if booking.StartTime else 'N/A' }}</td>
+                            <td>{{ booking.EndTime.strftime('%H:%M') if booking.EndTime else 'N/A' }}</td>
+                            <td>
+                                {% if booking.BookingStatus == 'Confirmed' %}
+                                    <span class="badge bg-success">{{ booking.BookingStatus }}</span>
+                                {% elif booking.BookingStatus == 'Cancelled' %}
+                                    <span class="badge bg-danger">{{ booking.BookingStatus }}</span>
+                                {% elif booking.BookingStatus == 'Pending' %}
+                                     <span class="badge bg-warning text-dark">{{ booking.BookingStatus }}</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">{{ booking.BookingStatus | default('Ismeretlen') }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                {# Részletek gomb (minden státuszhoz) #}
+                                <a href="{{ url_for('booking_details', booking_id=booking.BookingID) }}" class="btn btn-info btn-sm" title="Részletek">
+                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-info-circle" viewBox="0 0 16 16"><path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/><path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.064.293.006.399.287.47l.45.082.082.38-.29.287-.082.38.29.287.082.38-.29.287A1.06 1.06 0 0 0 8 12.5c.58 0 1.06-.48 1.06-1.06l.738-3.468c.064-.293 0-.399-.287-.47l-.45-.082-.082-.38.29-.287.082-.38-.29-.287-.082-.38zm-.495-1.703c.04-.168.18-.322.345-.37l.646-.176.117-.313a1.06 1.06 0 1 0-2.12 0l.117.313.646.176c.164.048.305.202.345.37l.04.168c-.027.177-.114.3-.37.445l-.646.361-.117.313a1.06 1.06 0 0 0 2.12 0l-.117-.313-.646-.361c-.256-.145-.343-.268-.37-.445l-.04-.168z"/></svg>
+                                     Részletek
+                                </a>
+
+                                {# Lemondás gomb (csak ha Confirmed) #}
+                                {% if booking.BookingStatus == 'Confirmed' %}
+                                <form action="{{ url_for('admin_cancel_booking', booking_id=booking.BookingID) }}" method="POST" class="d-inline ms-1">
+                                    <button type="submit" class="btn btn-danger btn-sm" title="Lemondás (Admin)"
+                                            onclick="return confirm('Biztosan lemondod ezt a foglalást (ID: {{ booking.BookingID }}, User: {{ booking.UserName | e }})?');">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-circle-fill" viewBox="0 0 16 16"><path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM5.354 4.646a.5.5 0 1 0-.708.708L7.293 8l-2.647 2.646a.5.5 0 0 0 .708.708L8 8.707l2.646 2.647a.5.5 0 0 0 .708-.708L8.707 8l2.647-2.646a.5.5 0 0 0-.708-.708L8 7.293 5.354 4.646z"/></svg>
+                                        Lemondás
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="alert alert-info" role="alert">
+            Nincsenek megjeleníthető foglalások a kiválasztott szűrőkkel.
+        </div>
+    {% endif %}
+
+     <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary mt-3">Vissza a Vezérlőpulthoz</a>
+
+{% endblock %}

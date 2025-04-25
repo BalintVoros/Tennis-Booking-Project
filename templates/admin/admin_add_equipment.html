@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}Új Eszköz Hozzáadása - Admin{% endblock %}
+
+{% block content %}
+    <h2 class="mb-4">Új Eszköz Hozzáadása</h2>
+
+    <form method="POST" action="{{ url_for('admin_create_equipment') }}" class="needs-validation" novalidate>
+        <div class="row g-3">
+            {# Equipment Type #}
+            <div class="col-md-12 mb-3">
+                <label for="equipment_type" class="form-label">Eszköz Típusa:</label>
+                <input type="text" class="form-control" id="equipment_type" name="equipment_type" required placeholder="Pl. Teniszütő, Teniszlabda (3db), Csuklószorító..." value="{{ request.form.equipment_type if request.form else '' }}">
+                <div class="invalid-feedback">Eszköz típusának megadása kötelező.</div>
+            </div>
+
+            {# Brand #}
+            <div class="col-md-6 mb-3">
+                <label for="brand" class="form-label">Márka:</label>
+                <input type="text" class="form-control" id="brand" name="brand" placeholder="Pl. Wilson, Head, Babolat..." value="{{ request.form.brand if request.form else '' }}">
+            </div>
+
+            {# Model #}
+            <div class="col-md-6 mb-3">
+                <label for="model" class="form-label">Modell:</label>
+                <input type="text" class="form-control" id="model" name="model" placeholder="Pl. Pro Staff, Radical, Pure Aero..." value="{{ request.form.model if request.form else '' }}">
+            </div>
+
+            {# Quantity In Stock #}
+             <div class="col-md-6 mb-3">
+                <label for="quantity" class="form-label">Készlet (db):</label>
+                <input type="number" class="form-control" id="quantity" name="quantity" required min="0" step="1" value="{{ request.form.quantity if request.form else '0' }}">
+                 <div class="invalid-feedback">Érvényes, nem negatív darabszám megadása kötelező.</div>
+            </div>
+
+            {# Rental Price #}
+             <div class="col-md-6 mb-3">
+                <label for="price" class="form-label">Kölcsönzési Díj (Ft / alkalom vagy óra?):</label> {# Clarify unit? #}
+                <input type="number" class="form-control" id="price" name="price" required min="0" step="50" placeholder="Pl. 500" value="{{ request.form.price if request.form else '' }}">
+                 <div class="invalid-feedback">Érvényes, nem negatív kölcsönzési díj megadása kötelező.</div>
+            </div>
+
+        </div> {# End row #}
+
+        <hr>
+        <div class="d-flex justify-content-between">
+             <a href="{{ url_for('admin_list_equipment') }}" class="btn btn-secondary">Mégse</a>
+             <button type="submit" class="btn btn-success">Eszköz Létrehozása</button>
+        </div>
+    </form>
+
+     {# Bootstrap validation script #}
+    <script>
+        (function () { /* ... validation script ... */ })();
+    </script>
+
+{% endblock %}

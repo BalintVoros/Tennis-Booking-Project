@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block title %}Felhasználó Szerkesztése - Admin{% endblock %}
+
+{% block content %}
+    <h2 class="mb-4">Felhasználó Szerkesztése: {{ user.Name if user else 'Ismeretlen' }}</h2>
+
+    {# Ellenőrizzük, betöltődtek-e a felhasználói adatok #}
+    {% if user %}
+    {# Az űrlap a /admin/user/update útvonalra küldi az adatokat POST metódussal #}
+    <form method="POST" action="{{ url_for('admin_update_user') }}" class="needs-validation" novalidate>
+        {# Rejtett mező a UserID átadásához #}
+        <input type="hidden" name="user_id" value="{{ user.UserID }}">
+
+        <div class="row g-3">
+            {# Név mező #}
+            <div class="col-md-6 mb-3">
+                <label for="name" class="form-label">Teljes Név:</label>
+                <input type="text" class="form-control" id="name" name="name" required value="{{ user.Name | e }}"> {# |e : HTML escape #}
+                <div class="invalid-feedback">Név megadása kötelező.</div>
+            </div>
+
+            {# Email mező #}
+            <div class="col-md-6 mb-3">
+                <label for="email" class="form-label">Email cím:</label>
+                <input type="email" class="form-control" id="email" name="email" required value="{{ user.Email | e }}">
+                 <div class="invalid-feedback">Érvényes email cím megadása kötelező.</div>
+                 {# Megjegyzés: Szerver oldalon ellenőrizni kell az email egyediségét, ha változott #}
+            </div>
+
+            {# Státusz mező (Legördülő lista) #}
+            <div class="col-md-6 mb-3">
+                <label for="member_status" class="form-label">Státusz:</label>
+                <select class="form-select" id="member_status" name="member_status" required {% if user.UserID == session.user_id %}disabled title="Saját státusz módosítása nem javasolt ezen a felületen."{% endif %}>
+                    {# Engedélyezett státuszok #}
+                    {% set allowed_statuses = ['Active', 'Inactive', 'Suspended'] %}
+                    {% for status in allowed_statuses %}
+                        <option value="{{ status }}" {% if user.MemberStatus == status %}selected{% endif %}>
+                            {{ status }}
+                        </option>
+                    {% endfor %}
+                </select>
+                {% if user.UserID == session.user_id %}
+                    <input type="hidden" name="member_status" value="{{ user.MemberStatus }}"> {# Küldjük el az eredeti státuszt, ha tiltva van #}
+                    <small class="form-text text-danger">FIGYELEM: Saját fiók inaktívvá vagy felfüggesztetté tétele kizárhatja Önt!</small>
+                {% endif %}
+                 <div class="invalid-feedback">Státusz kiválasztása kötelező.</div>
+            </div>
+
+            {# Szerepkör mező (Legördülő lista) #}
+            <div class="col-md-6 mb-3">
+                <label for="role" class="form-label">Szerepkör:</label>
+                {# Tiltjuk a saját szerepkör módosítását az adminnak #}
+                <select class="form-select" id="role" name="role" required {% if user.UserID == session.user_id %}disabled title="Saját szerepkör módosítása nem javasolt ezen a felületen."{% endif %}>
+                    {# Engedélyezett szerepkörök #}
+                     {% set allowed_roles = ['user', 'admin'] %}
+                    {% for role_option in allowed_roles %}
+                        <option value="{{ role_option }}" {% if user.Role == role_option %}selected{% endif %}>
+                            {{ role_option }}
+                        </option>
+                    {% endfor %}
+                </select>
+                 {% if user.UserID == session.user_id %}
+                    {# Ha a mező tiltva van, a böngésző nem küldi el az értékét, ezért egy rejtett mezővel pótoljuk #}
+                    <input type="hidden" name="role" value="{{ user.Role }}">
+                    <small class="form-text text-danger">FIGYELEM: Saját admin szerepkör módosítása ('user'-re) kizárhatja Önt az admin felületről!</small>
+                 {% endif %}
+                 <div class="invalid-feedback">Szerepkör kiválasztása kötelező.</div>
+            </div>
+
+        </div> {# Sor vége #}
+
+        <hr>
+        {# Gombok: Mégse és Mentés #}
+        <div class="d-flex justify-content-between">
+             <a href="{{ url_for('admin_list_users') }}" class="btn btn-secondary">Mégse</a>
+             <button type="submit" class="btn btn-primary">Mentés</button>
+        </div>
+    </form>
+
+    {% else %}
+        {# Ha a felhasználói adatok nem töltődtek be #}
+         <div class="alert alert-danger" role="alert">
+            Hiba: A felhasználó adatai nem tölthetők be (ID: {{ request.view_args.get('user_id') }}).
+         </div>
+          <a href="{{ url_for('admin_list_users') }}" class="btn btn-secondary">Vissza a listához</a>
+    {% endif %}
+
+    {# Bootstrap validációs script (ha még nincs a base.html-ben) #}
+    <script>
+        (function () {
+          'use strict'
+          var forms = document.querySelectorAll('.needs-validation')
+          Array.prototype.slice.call(forms)
+            .forEach(function (form) {
+              form.addEventListener('submit', function (event) {
+                if (!form.checkValidity()) {
+                  event.preventDefault()
+                  event.stopPropagation()
+                }
+                form.classList.add('was-validated')
+              }, false)
+            })
+        })()
+    </script>
+
+{% endblock %}

@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}Felhasználók Kezelése - Admin{% endblock %}
+
+{% block content %}
+    <h2 class="mb-4">Felhasználók Kezelése</h2>
+
+    {% if users %}
+        <div class="table-responsive">
+            <table class="table table-striped table-hover table-sm align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th scope="col">ID</th>
+                        <th scope="col">Név</th>
+                        <th scope="col">Email</th>
+                        <th scope="col">Státusz</th>
+                        <th scope="col">Szerepkör</th>
+                        <th scope="col" class="text-center">Műveletek</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    {# Adjunk hozzá egy osztályt a sorhoz, ha a felhasználó nem aktív #}
+                    <tr class="{{ 'table-secondary' if user.MemberStatus != 'Active' else '' }}">
+                        <th scope="row">{{ user.UserID }}</th>
+                        <td>{{ user.Name }}</td>
+                        <td>{{ user.Email }}</td>
+                        <td>
+                            {# Státusz badge (ez már megvolt) #}
+                            {% if user.MemberStatus == 'Active' %}
+                                <span class="badge bg-success">{{ user.MemberStatus }}</span>
+                            {% elif user.MemberStatus == 'Inactive' %}
+                                <span class="badge bg-secondary">{{ user.MemberStatus }}</span>
+                            {% elif user.MemberStatus == 'Suspended' %}
+                                <span class="badge bg-warning text-dark">{{ user.MemberStatus }}</span>
+                            {% else %}
+                                <span class="badge bg-light text-dark">{{ user.MemberStatus }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {# Szerepkör badge (ez már megvolt) #}
+                            {% if user.Role == 'admin' %}
+                                <span class="badge bg-info">{{ user.Role }}</span>
+                            {% else %}
+                                <span class="badge bg-light text-dark">{{ user.Role }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            {# === SZERKESZTÉS ÉS AKTIVÁLÁS/DEAKTIVÁLÁS GOMBOK === #}
+                
+                            {# Szerkesztés gomb (link a szerkesztő oldalra) #}
+                            <a href="{{ url_for('admin_edit_user', user_id=user.UserID) }}" class="btn btn-outline-primary btn-sm" title="Szerkesztés">
+                                {# Bootstrap 'pencil-square' ikon #}
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil-square" viewBox="0 0 16 16"><path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/><path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5v11z"/></svg>
+                                Szerkesztés
+                            </a>
+                
+                            {# Deaktiválás gomb (POST kérés küldése) #}
+                            {# Csak akkor, ha a felhasználó nem a bejelentkezett admin ÉS státusza 'Active' #}
+                            {% if user.UserID != session.user_id and user.MemberStatus == 'Active' %}
+                            <form action="{{ url_for('admin_deactivate_user', user_id=user.UserID) }}" method="POST" class="d-inline ms-1"> {# d-inline: egy sorba kerüljön a gomb #}
+                                <button type="submit" class="btn btn-outline-warning btn-sm" title="Deaktiválás"
+                                        onclick="return confirm('Biztosan inaktívvá teszed ezt a felhasználót: {{ user.Name | e }} (ID: {{ user.UserID }})?\nAz inaktív felhasználó be tud lépni, de nem fog tudni foglalni.');">
+                                    {# Bootstrap 'person-slash' ikon #}
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person-slash" viewBox="0 0 16 16"><path d="M13.879 10.414a2.501 2.501 0 0 0-3.465 3.465l3.465-3.465Zm.707-2.121a2.5 2.5 0 0 0-3.465 3.465l3.465-3.465ZM10.414 13.879a2.5 2.5 0 0 0 3.465-3.465l-3.465 3.465ZM14.586 11.5a2.5 2.5 0 0 0-3.465-3.465L11.12 8.035a.5.5 0 0 1 0 .707l3.465 3.465ZM8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0Zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4Zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664H13Z M1.146 14.854l13-13 .708.708-13 13-.708-.708Z"/></svg>
+                                    Deaktiválás
+                                </button>
+                            </form>
+                            {% endif %}
+                
+                            {# Aktiválás gomb (POST kérés küldése) #}
+                            {# Csak akkor, ha a felhasználó nem a bejelentkezett admin ÉS státusza 'Inactive' #}
+                            {% if user.UserID != session.user_id and user.MemberStatus == 'Inactive' %}
+                             <form action="{{ url_for('admin_activate_user', user_id=user.UserID) }}" method="POST" class="d-inline ms-1">
+                                 <button type="submit" class="btn btn-outline-success btn-sm" title="Aktiválás"
+                                         onclick="return confirm('Biztosan aktívvá teszed ezt a felhasználót: {{ user.Name | e }} (ID: {{ user.UserID }})?');">
+                                     {# Bootstrap 'person-check' ikon #}
+                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person-check" viewBox="0 0 16 16"><path d="M12.5 16a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Zm1.679-4.493-1.335 2.226-1.334-2.226-.21-.354-.25-.41a.25.25 0 0 1 .024-.375l.149-.116a.25.25 0 0 1 .343-.01l.11.102c.068.063.146.14.256.233.096.083.214.175.33.259.117.084.248.157.384.217l.034.014Zm-1.97 1.888.016.032.048.087.08.133.104.169.125.187.142.199.15.197.154.185.151.165.143.139.128.109.106.076.078.046.042.018.016-.005.004-.013a3.49 3.49 0 0 1-1.347 0l-.004.013-.016.005-.042.018-.078.046-.106.076-.128.109-.143.139-.151.165-.154.185-.15.197-.142.199-.125.187-.104.169-.08.133-.048.087-.016.032Z"/><path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0Zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4Zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664H13Z"/></svg>
+                                     Aktiválás
+                                 </button>
+                             </form>
+                             {% endif %}
+                             {# ================================================= #}
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="alert alert-info" role="alert">
+            Nincsenek felhasználók az adatbázisban vagy hiba történt a betöltésükkor.
+        </div>
+    {% endif %}
+
+    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary mt-3">Vissza a Vezérlőpulthoz</a>
+
+{% endblock %}

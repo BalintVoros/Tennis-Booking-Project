@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block title %}Új Foglalás - Tenisz Foglaló{% endblock %}
+
+{% block content %}
+    <h2>Új Foglalás Rögzítése</h2>
+
+    {% if error %}
+        <div class="alert alert-danger" role="alert">
+            Hiba: {{ error }}
+        </div>
+    {% endif %}
+
+    <form method="POST" action="{{ url_for('add_booking') }}" class="needs-validation" novalidate> {# HTML5 validáció bekapcsolása #}
+        <div class="row g-3"> {# Grid rendszer térközzel #}
+            <div class="col-md-6 mb-3">
+                <label for="court_id" class="form-label">Pálya kiválasztása:</label>
+                <select name="court_id" id="court_id" class="form-select" required> {# form-select osztály #}
+                    <option value="">-- Válassz pályát --</option>
+                    {% for court in courts %}
+                        <option value="{{ court.CourtID }}">
+                            {{ court.CourtNumber }} - {{ court.SurfaceType }} ({{ court.LocationType }}) - {{ "%.0f"|format(court.PricePerHour|float) }} Ft/óra
+                        </option>
+                    {% endfor %}
+                </select>
+                 <div class="invalid-feedback">Pálya kiválasztása kötelező.</div>
+            </div>
+       </div>
+       <div class="row g-3">
+        <div class="col-md-6 mb-3">
+        <label for="start_time" class="form-label">Foglalás kezdete:</label>
+        {# Type "text"-re változtatva, class hozzáadva #}
+        <input type="text" class="form-control flatpickr-datetime" id="start_time" name="start_time" required placeholder="Válassz időpontot...">
+         <div class="invalid-feedback">Kezdő időpont megadása kötelező.</div>
+    </div>
+
+    <div class="col-md-6 mb-3">
+        <label for="end_time" class="form-label">Foglalás vége:</label>
+        {# Type "text"-re változtatva, class hozzáadva #}
+        <input type="text" class="form-control flatpickr-datetime" id="end_time" name="end_time" required placeholder="Válassz időpontot...">
+         <div class="invalid-feedback">Befejező időpont megadása kötelező.</div>
+    </div>
+        </div>
+
+        <hr>
+
+        {% if equipment_list %}
+        <h3 class="mt-4">Eszközök Kölcsönzése (Opcionális)</h3>
+        <div class="row row-cols-1 row-cols-md-2 g-3">
+            {% for equip in equipment_list %}
+                <div class="col">
+                    <div class="form-check border p-3 rounded mb-2"> {# Picit nagyobb padding #}
+                        <input class="form-check-input" type="checkbox" id="equip_{{ equip.EquipmentID }}" name="selected_equipment" value="{{ equip.EquipmentID }}">
+                        <label class="form-check-label d-block mb-2" for="equip_{{ equip.EquipmentID }}"> {# d-block: teljes szélességű label #}
+                            <strong>{{ equip.EquipmentType }}</strong>
+                            {% if equip.Brand %}<small class="text-muted"> ({{ equip.Brand }} {{ equip.Model or '' }})</small>{% endif %}<br>
+                            <span class="text-success">{{ "%.0f"|format(equip.RentalPrice|float) }} Ft/db</span> {# Zöld ár #}
+                            <span class="badge bg-secondary ms-2">Készleten: {{ equip.QuantityInStock }}</span> {# Térköz a badge előtt #}
+                        </label>
+    
+                        {# === ÚJ Mennyiség Input Mező === #}
+                        <div class="mt-1"> {# Kis margó felül #}
+                             <label for="quantity_{{ equip.EquipmentID }}" class="form-label form-label-sm visually-hidden">Mennyiség:</label> {# Kisebb, rejtett label #}
+                             <input type="number"
+                                    class="form-control form-control-sm w-auto d-inline-block" {# Kisebb méret, automatikus szélesség #}
+                                    id="quantity_{{ equip.EquipmentID }}"
+                                    name="quantity_{{ equip.EquipmentID }}" {# Fontos a név! quantity_ plusz az ID #}
+                                    value="1" {# Alapértelmezett érték #}
+                                    min="1"   {# Minimum 1 db #}
+                                    max="{{ equip.QuantityInStock }}" {# Maximum a készlet erejéig #}
+                                    style="max-width: 80px;" {# Maximális szélesség korlátozása #}
+                                   {# Opcionális: JavaScripttel lehetne tiltani, ha a checkbox nincs bepipálva #}
+                                   > db
+                        </div>
+                        {# ============================== #}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="text-muted">Jelenleg nincsenek kölcsönözhető eszközök.</p>
+    {% endif %}
+
+        <hr>
+
+        <div class="d-grid gap-2 col-6 mx-auto"> {# Gomb középre, szélesebb #}
+            <button type="submit" class="btn btn-success btn-lg">Foglalás Rögzítése</button>
+        </div>
+    </form>
+
+    <p class="mt-4 text-center"><a href="{{ url_for('home') }}">Vissza a főoldalra</a></p>
+
+
+    {# Egyszerű HTML5 validáció script (Bootstrap ajánlása) #}
+    <script>
+        (function () {
+          'use strict'
+          var forms = document.querySelectorAll('.needs-validation')
+          Array.prototype.slice.call(forms)
+            .forEach(function (form) {
+              form.addEventListener('submit', function (event) {
+                if (!form.checkValidity()) {
+                  event.preventDefault()
+                  event.stopPropagation()
+                }
+                form.classList.add('was-validated')
+              }, false)
+            })
+        })()
+    </script>
+    <script>
+        // Megvárjuk, amíg a DOM teljesen betöltődik
+        document.addEventListener('DOMContentLoaded', function () {
+            // Flatpickr inicializálása minden '.flatpickr-datetime' osztályú elemen
+            flatpickr(".flatpickr-datetime", {
+                enableTime: true,       // Időválasztás engedélyezése
+                dateFormat: "Y-m-d H:i", // Dátumformátum (ISO 8601-hez közeli, amit a Python könnyen kezel)
+                time_24hr: true,        // 24 órás formátum használata
+                locale: "hu",           // Magyar nyelvi beállítások használata (a hu.js fájlból)
+                minuteIncrement: 30,    // Perc lépték (pl. csak fél óránként lehessen választani)
+                // Opcionális: Mai napnál korábbi dátum tiltása
+                // minDate: "today",
+                // Opcionális: Kezdő időpont beállítása a holnapi nap reggel 8-ra
+                // defaultDate: new Date().fp_incr(1).setHours(8, 0, 0, 0),
+            });
+            console.log("Flatpickr inicializálva."); // Debug üzenet a böngésző konzoljára
+        }); </script>
+
+{% endblock %}

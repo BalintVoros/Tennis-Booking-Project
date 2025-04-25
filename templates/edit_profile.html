@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}Profil Szerkesztése - Tenisz Foglaló{% endblock %}
+
+{% block content %}
+    <h2 class="mb-4">Profil Szerkesztése</h2>
+
+
+    {% if current_user_data %}
+    <form method="POST" action="{{ url_for('update_profile') }}" class="needs-validation" novalidate>
+
+
+        <div class="row g-3">
+            {# Név mező #}
+            <div class="col-md-6 mb-3">
+                <label for="name" class="form-label">Teljes Név:</label>
+                <input type="text" class="form-control" id="name" name="name" required value="{{ current_user_data.Name | e }}">
+                <div class="invalid-feedback">Név megadása kötelező.</div>
+            </div>
+
+            {# Email mező #}
+            <div class="col-md-6 mb-3">
+                <label for="email" class="form-label">Email cím:</label>
+                <input type="email" class="form-control" id="email" name="email" required value="{{ current_user_data.Email | e }}">
+                 <div class="invalid-feedback">Érvényes email cím megadása kötelező.</div>
+                 {# Szerver oldalon ellenőrizni kell az email egyediségét, ha változott #}
+            </div>
+        </div> 
+
+        <hr>
+        <div class="d-flex justify-content-between">
+             {# Vissza a profil oldalra #}
+             <a href="{{ url_for('profile') }}" class="btn btn-secondary">Mégse</a>
+             <button type="submit" class="btn btn-primary">Mentés</button>
+        </div>
+    </form>
+    {% else %}
+         <div class="alert alert-danger" role="alert">
+            Hiba: A felhasználói adatok nem tölthetők be a szerkesztéshez.
+         </div>
+          <a href="{{ url_for('profile') }}" class="btn btn-secondary">Vissza a profilhoz</a>
+    {% endif %}
+
+
+    <script>
+        (function () {
+          'use strict';
+          var forms = document.querySelectorAll('.needs-validation');
+          Array.prototype.slice.call(forms)
+            .forEach(function (form) {
+              form.addEventListener('submit', function (event) {
+                if (!form.checkValidity()) {
+                  event.preventDefault();
+                  event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+              }, false);
+            });
+        })();
+    </script>
+
+{% endblock %}

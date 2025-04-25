@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}Új Pálya Hozzáadása - Admin{% endblock %}
+
+{% block content %}
+    <h2 class="mb-4">Új Pálya Hozzáadása</h2>
+
+    <form method="POST" action="{{ url_for('admin_create_court') }}" class="needs-validation" novalidate>
+        <div class="row g-3">
+            {# Pályaszám #}
+            <div class="col-md-6 mb-3">
+                <label for="court_number" class="form-label">Pályaszám:</label>
+                <input type="text" class="form-control" id="court_number" name="court_number" required placeholder="Pl. 1, 2, A1..." value="{{ request.form.court_number if request.form else '' }}">
+                <div class="invalid-feedback">Pályaszám megadása kötelező.</div>
+               
+            </div>
+
+            {# Óradíj #}
+             <div class="col-md-6 mb-3">
+                <label for="price_per_hour" class="form-label">Óradíj (Ft):</label>
+                <input type="number" class="form-control" id="price_per_hour" name="price_per_hour" required min="0" step="100" placeholder="Pl. 3000" value="{{ request.form.price_per_hour if request.form else '' }}">
+                 <div class="invalid-feedback">Érvényes, nem negatív óradíj megadása kötelező (pl. 3000).</div>
+            </div>
+
+             {# Borítás Típusa #}
+            <div class="col-md-6 mb-3">
+                <label for="surface_type" class="form-label">Borítás Típusa:</label>
+                <input type="text" class="form-control" id="surface_type" name="surface_type" placeholder="Pl. Salak, Kemény, Műfű..." value="{{ request.form.surface_type if request.form else '' }}">
+                {# Opcionális: Legördülő lista lehetne, ha fix típusok vannak #}
+            </div>
+
+            {# Helyszín Típusa #}
+             <div class="col-md-6 mb-3">
+                <label for="location_type" class="form-label">Helyszín Típusa:</label>
+                 <input type="text" class="form-control" id="location_type" name="location_type" placeholder="Pl. Kültéri, Fedett, Sátor..." value="{{ request.form.location_type if request.form else '' }}">
+                 {# Opcionális: Legördülő lista lehetne, ha fix típusok vannak #}
+            </div>
+
+        </div> 
+
+        <hr>
+        <div class="d-flex justify-content-between">
+             <a href="{{ url_for('admin_list_courts') }}" class="btn btn-secondary">Mégse</a>
+             <button type="submit" class="btn btn-success">Pálya Létrehozása</button>
+        </div>
+    </form>
+
+
+    <script>
+        (function () {
+          'use strict'
+          var forms = document.querySelectorAll('.needs-validation')
+          Array.prototype.slice.call(forms)
+            .forEach(function (form) {
+              form.addEventListener('submit', function (event) {
+                if (!form.checkValidity()) {
+                  event.preventDefault()
+                  event.stopPropagation()
+                }
+                form.classList.add('was-validated')
+              }, false)
+            })
+        })()
+    </script>
+
+{% endblock %}

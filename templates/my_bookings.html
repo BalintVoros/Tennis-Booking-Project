@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Foglalásaim - Tenisz Foglaló{% endblock %}
+
+{% block content %}
+    <h2 class="mb-4">Aktuális és Jövőbeli Foglalásaim</h2>
+
+    {% if bookings %}
+        <div class="table-responsive"> 
+            <table class="table table-striped table-hover table-sm align-middle"> 
+                <thead class="table-light"> {# Világos fejléc #}
+                    <tr>
+                        <th scope="col">Pálya</th>
+                        <th scope="col">Kezdés</th>
+                        <th scope="col">Befejezés</th>
+                        <th scope="col">Státusz</th>
+                        <th scope="col" class="text-center">Műveletek</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for booking in bookings %}
+                        <tr>
+                            <td>{{ booking.CourtNumber }} <small class="text-muted">({{ booking.SurfaceType }}/{{ booking.LocationType }})</small></td>
+                            <td>{{ booking.StartTime.strftime('%Y.%m.%d %H:%M') }}</td>
+                            <td>{{ booking.EndTime.strftime('%H:%M') }}</td>
+                            <td><span class="badge bg-success">{{ booking.BookingStatus }}</span></td> {# Zöld 'badge' a státuszhoz #}
+                            <td class="text-center">
+                                <a href="{{ url_for('booking_details', booking_id=booking.BookingID) }}" class="btn btn-info btn-sm" title="Részletek">Részletek</a>
+
+                            
+                                <form action="{{ url_for('cancel_booking', booking_id=booking.BookingID) }}" method="POST" class="d-inline"> {# d-inline: egy sorban a gombok #}
+                                    <button type="submit" class="btn btn-danger btn-sm"
+                                            onclick="return confirm('Biztosan lemondod ezt a foglalást (ID: {{ booking.BookingID }})? Ez a művelet nem visszavonható.');"
+                                            title="Lemondás">
+                                        Lemondás
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="alert alert-info" role="alert">
+            Nincsenek aktív vagy jövőbeli foglalásaid. <a href="{{ url_for('new_booking_form') }}" class="alert-link">Foglalj most!</a>
+        </div>
+    {% endif %}
+
+{% endblock %}

@@ -1,0 +1,9 @@
+runtime: python311
+entrypoint: gunicorn -b :$PORT app:app
+
+env_variables:
+  INSTANCE_CONNECTION_NAME: 'tennis-booking-project-12345:europe-west3:tennis-booking-sql' 
+  DB_NAME: 'TennisBookingDB'
+
+
+  SECRET_KEY: 'c3f5a1e8b9d7a4c2e1f8b7a6d5e4f3a2'

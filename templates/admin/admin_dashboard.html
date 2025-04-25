@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Vezérlőpult - Tenisz Foglaló{% endblock %}
+
+{% block content %}
+    <h2 class="mb-4">Admin Vezérlőpult</h2>
+    <p>Üdv az adminisztrációs felületen, {{ session.user_name }}!</p>
+
+    <div class="list-group">
+      {# Ezek a linkek a később létrehozandó admin oldalakra mutatnak majd #}
+      <a href="{{ url_for('admin_list_users') }}" class="list-group-item list-group-item-action">Felhasználók Kezelése</a>
+      <a href="{{ url_for('admin_list_courts') }}" class="list-group-item list-group-item-action {% if request.endpoint == 'admin_list_courts' %}active{% endif %}">Pályák Kezelése</a>
+      <a href="{{ url_for('admin_list_equipment') }}" class="list-group-item list-group-item-action {% if request.endpoint == 'admin_equipment' %}active{% endif %}">Eszközök Kezelése </a>
+      <a href="{{ url_for('admin_list_bookings') }}" class="list-group-item list-group-item-action {% if request.endpoint == 'admin_bookings' %}active{% endif %}">Foglalások Kezelése </a>
+    </div>
+
+{% endblock %}
